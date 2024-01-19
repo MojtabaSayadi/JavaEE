@@ -1,0 +1,213 @@
+pom.xml
+--------------------------------------
+<modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.17</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.cando</groupId>
+    <artifactId>uni</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>uni</name>
+    <description>uni</description>
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+        </dependency>
+     <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+      		<version>1.6.15</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.28</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+---------------------------
+end of pom.xml
+===============================================================
+application.yml
+------------------------
+server:
+  port: 7090
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cando
+    username: postgres
+    password: AAaa1010
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create or update
+---------------------------------------------------------
+end of application.yml
+====================================================================
+User.java
+--------------------------
+import lombok.Data;
+
+import javax.persistence.*;
+
+@Data
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String username;
+    private String password;
+    private String email;
+    private String phone;
+}
+-----------------------------------------------------
+end of User.java
+=================================================================
+interface UserRepository
+----------------------------
+import com.cando.uni.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+
+--------------------------------------------------
+end of interface UserRepository
+================================================================================
+UserController.java
+---------------------
+import com.cando.uni.model.User;
+import com.cando.uni.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("user")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping
+    public List<User> users() {
+        return userService.users();
+    }
+
+    @GetMapping("/{id}")
+    public User findUserById(@PathVariable Long id) {
+        return userService.findUserById(id);
+    }
+
+    @PostMapping
+    public User save(@RequestBody User user) {
+        return userService.save(user);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        userService.delete(id);
+    }
+
+
+    @PutMapping
+    public void update(@RequestBody User user){
+        userService.update(user);
+
+    }
+
+
+}
+----------------------------------------------
+end of UserController
+=========================================================
+UserService
+------------------
+import com.cando.uni.model.User;
+import com.cando.uni.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class UserService {
+
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public List<User> users() {
+        return userRepository.findAll();
+    }
+
+    public User findUserById(Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+        return userOptional.orElse(null);
+    }
+
+    public User save(User user) {
+        return userRepository.save(user);
+    }
+
+    public void delete(Long id) {
+        userRepository.deleteById(id);
+    }
+    public void update(User user){
+        User user1=findUserById(user.getId());
+        if (user1 != null){
+            user1.setUsername(user.getUsername());
+            user1.setPassword(user.getPassword());
+            user1.setEmail(user.getEmail());
+            user1.setPhone(user.getPhone());
+            userRepository.save(user1);
+        }
+
+    }
+}
+---------------------------------------------------------
+end of UserService
+=====================================================================
+databese user_name = postgres
+password = AAaa1010
